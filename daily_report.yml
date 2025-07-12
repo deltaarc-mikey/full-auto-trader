@@ -1,10 +1,9 @@
-name: Run Daily Market Report
+name: daily-report
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 12 * * *'  # 8 AM ET
-    - cron: '0 */4 * * *'  # Every 4 hours
 
 permissions:
   contents: write
@@ -12,9 +11,12 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout main branch
         uses: actions/checkout@v3
+        with:
+          ref: main  # ✅ Ensure it's working directly on main
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,13 +27,19 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run automated market pipeline
+      - name: Run automated pipeline
         run: python automated_pipeline.py
 
-      - name: Commit and Push CSV Report
+      - name: Commit and push CSV if not empty
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add *.csv
-          git commit -m "Add daily report CSV"
-          git push origin main
+          FILE=$(ls pre_xynth_trades_*.csv | head -n 1)
+          if [ -s "$FILE" ]; then
+            echo "✅ $FILE is not empty. Committing to main..."
+            git config --global user.name 'github-actions'
+            git config --global user.email 'github-actions@github.com'
+            git add "$FILE"
+            git commit -m "Add daily report: $FILE"
+            git push origin HEAD:main
+          else
+            echo "⚠️ $FILE is empty. Skipping commit."
+          fi
