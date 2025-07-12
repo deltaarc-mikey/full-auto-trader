@@ -6,7 +6,7 @@ from datetime import datetime
 from openai import OpenAI
 import google.generativeai as genai
 
-# 🔐 Authenticate Gemini (Gemini 2.5 Pro)
+# 🔐 Authenticate Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini = genai.GenerativeModel(model_name="gemini-2.5-pro")
 
@@ -50,8 +50,10 @@ def run_daily_pipeline():
     gemini_validated = call_gemini(VALIDATE_GEMINI.format(combined=combined_output))
     gpt_validated = call_gpt(VALIDATE_GPT.format(combined=combined_output))
 
-    # 5. Save to CSV
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # 5. Save output with timestamped filename
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+    filename = f"pre_xynth_trades_{timestamp}.csv"
+
     df = pd.DataFrame([{
         "Timestamp": timestamp,
         "Gemini Sentiment": sentiment_output,
@@ -62,8 +64,8 @@ def run_daily_pipeline():
         "GPT Validation": gpt_validated
     }])
 
-    df.to_csv("pre_xynth_trades.csv", index=False)
-    print("✅ pre_xynth_trades.csv saved.")
+    df.to_csv(filename, index=False)
+    print(f"✅ File saved: {filename}")
 
 if __name__ == "__main__":
     run_daily_pipeline()
