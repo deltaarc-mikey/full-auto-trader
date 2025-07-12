@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: write  # 🔐 Needed to push to repo
 
     steps:
       - uses: actions/checkout@v3
