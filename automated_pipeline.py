@@ -7,7 +7,7 @@ from google.generativeai import GenerativeModel
 import pandas as pd
 
 # Load keys
-openai.api_key = os.getenv("OPENAI_API_KEY")
+OpenAi.api_key = os.getenv("OPENAI_API_KEY")
 gemini_key = os.getenv("GEMINI_API_KEY")
 
 # Set up models
