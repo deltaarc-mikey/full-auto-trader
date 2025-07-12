@@ -5,19 +5,22 @@ import os
 import google.generativeai as genai
 from openai import OpenAI
 
-# Auth
+# 🔐 Authenticate Gemini (Gemini 2.5 Pro)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-gemini = genai.GenerativeModel(model_name="models/gemini-pro")
+gemini = genai.GenerativeModel(model_name="gemini-2.5-pro")
+
+# 🔐 Authenticate OpenAI
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def call_gpt(prompt):
+def call_gpt(prompt: str) -> str:
     return openai_client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}]
     ).choices[0].message.content.strip()
 
-def call_gemini(prompt):
-    return gemini.generate_content(prompt).text.strip()
+def call_gemini(prompt: str) -> str:
+    response = gemini.generate_content(prompt)
+    return response.text.strip()
 
 def run_tab():
     st.subheader("📄 Upload XYNTH Output for Final Analysis")
@@ -26,11 +29,11 @@ def run_tab():
     if uploaded_file:
         content = uploaded_file.read().decode("utf-8")
 
-        gemini_response = call_gemini(f"Summarize the following trade data and provide execution-ready instructions:\n{content}")
-        gpt_response = call_gpt(f"Summarize the following trade data and provide execution-ready instructions:\n{content}")
+        gemini_summary = call_gemini(f"Summarize the following XYNTH output and convert to clear trades:\n{content}")
+        gpt_summary = call_gpt(f"Summarize the following XYNTH output and convert to clear trades:\n{content}")
 
-        st.success("✅ Summarization complete.")
+        st.success("✅ Analysis Complete")
         st.markdown("### 🧠 Gemini Summary")
-        st.write(gemini_response)
+        st.write(gemini_summary)
         st.markdown("### 🤖 GPT Summary")
-        st.write(gpt_response)
+        st.write(gpt_summary)
