@@ -1,14 +1,14 @@
 # upload_xynth.py
+
 import streamlit as st
 import os
+import google.generativeai as genai
 from openai import OpenAI
-from google.generativeai import GenerativeModel
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-gemini_key = os.getenv("GEMINI_API_KEY")
-
-openai_client = OpenAI()
-gemini = GenerativeModel("gemini-pro")
+# Auth
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+gemini = genai.GenerativeModel(model_name="models/gemini-pro")
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def call_gpt(prompt):
     return openai_client.chat.completions.create(
