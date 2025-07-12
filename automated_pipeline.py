@@ -1,12 +1,19 @@
 # automated_pipeline.py
 
 import os
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
 from openai import OpenAI
-from google.generativeai import GenerativeModel
+import google.generativeai as genai
 
-# ⬇️ Import your finalized prompts
+# ⬇️ Authenticate Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+gemini = genai.GenerativeModel(model_name="models/gemini-pro")
+
+# ⬇️ Authenticate OpenAI
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# ⬇️ Load prompts from external file
 from prompts import (
     GEMINI_SENTIMENT,
     GEMINI_TRADES,
@@ -16,15 +23,9 @@ from prompts import (
     VALIDATE_GPT
 )
 
-# ⬇️ Set up API clients
-OpenAI.api_key = os.getenv("OPENAI_API_KEY")
-gemini_key = os.getenv("GEMINI_API_KEY")
-openai_client = OpenAI()
-gemini = GenerativeModel("gemini-pro")
-
-# ⬇️ Prompt call helpers
 def call_gemini(prompt: str) -> str:
-    return gemini.generate_content(prompt).text.strip()
+    response = gemini.generate_content(prompt)
+    return response.text.strip()
 
 def call_gpt(prompt: str) -> str:
     return openai_client.chat.completions.create(
@@ -32,25 +33,24 @@ def call_gpt(prompt: str) -> str:
         messages=[{"role": "user", "content": prompt}]
     ).choices[0].message.content.strip()
 
-# ⬇️ Run the full pipeline
 def run_daily_pipeline():
     print("🚀 Running automated pipeline...")
 
-    # 1. Gemini sentiment
+    # 1. Sentiment analysis via Gemini
     sentiment_output = call_gemini(GEMINI_SENTIMENT)
 
-    # 2. Gemini + GPT trade suggestions (based on sentiment)
+    # 2. Trade suggestions
     gemini_trades = call_gemini(GEMINI_TRADES.format(sentiment=sentiment_output))
     gpt_trades = call_gpt(GPT_TRADES.format(sentiment=sentiment_output))
 
-    # 3. Combine
+    # 3. Combine results
     combined_output = call_gpt(COMBINE_PROMPT.format(gemini=gemini_trades, gpt=gpt_trades))
 
-    # 4. Validate output with both models
+    # 4. Final validation
     gemini_validated = call_gemini(VALIDATE_GEMINI.format(combined=combined_output))
     gpt_validated = call_gpt(VALIDATE_GPT.format(combined=combined_output))
 
-    # 5. Output to CSV
+    # 5. Save output
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     df = pd.DataFrame([{
         "Timestamp": timestamp,
@@ -65,6 +65,5 @@ def run_daily_pipeline():
     df.to_csv("pre_xynth_trades.csv", index=False)
     print("✅ pre_xynth_trades.csv saved.")
 
-# Entry point
 if __name__ == "__main__":
     run_daily_pipeline()
