@@ -1,24 +1,22 @@
 name: daily-report
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 12 * * *"  # runs daily at 8 AM ET (12:00 UTC)
-  workflow_dispatch:      # allows manual run
+    - cron: '0 8 * * *'  # 8 AM UTC (adjust as needed)
 
 jobs:
-  build:
+  run-report:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository with push access
+      - name: Checkout repo
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
@@ -30,10 +28,12 @@ jobs:
           echo "🚀 Running automated pipeline..."
           python automated_pipeline.py
 
-      - name: Commit and push output file
+      - name: Commit and push output CSV
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add *.csv
-          git commit -m "Add daily report CSV $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-          git push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          FILE=$(ls pre_xynth_trades_*.csv | sort | tail -n 1)
+          git add "$FILE"
+          git commit -m "Add daily report: $FILE"
+          git push origin main
