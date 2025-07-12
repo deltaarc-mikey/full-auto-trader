@@ -1,39 +1,37 @@
 name: Run Daily Market Report
 
 on:
-  schedule:
-    - cron: '0 12 * * *'   # 8:00 AM ET
-    - cron: '0 */4 * * *'  # Every 4 hours
   workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'  # 8 AM ET
+    - cron: '0 */4 * * *'  # Every 4 hours
+
+permissions:
+  contents: write
 
 jobs:
-  daily-report:
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
 
       - name: Run automated market pipeline
         run: python automated_pipeline.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Commit and push new CSV
+      - name: Commit and Push CSV Report
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add *.csv || echo "No files to add"
-          git commit -m "Add new timestamped pre-xynth trades CSV" || echo "No changes to commit"
-          git push || echo "Nothing to push"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add *.csv
+          git commit -m "Add daily report CSV"
+          git push origin main
