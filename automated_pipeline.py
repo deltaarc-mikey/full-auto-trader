@@ -6,14 +6,14 @@ from datetime import datetime
 from openai import OpenAI
 import google.generativeai as genai
 
-# ⬇️ Authenticate Gemini
+# 🔐 Authenticate Gemini (Gemini 2.5 Pro)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-gemini = genai.GenerativeModel(model_name="models/gemini-pro")
+gemini = genai.GenerativeModel(model_name="gemini-2.5-pro")
 
-# ⬇️ Authenticate OpenAI
+# 🔐 Authenticate OpenAI
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# ⬇️ Load prompts from external file
+# ⬇️ Import prompt templates
 from prompts import (
     GEMINI_SENTIMENT,
     GEMINI_TRADES,
@@ -36,21 +36,21 @@ def call_gpt(prompt: str) -> str:
 def run_daily_pipeline():
     print("🚀 Running automated pipeline...")
 
-    # 1. Sentiment analysis via Gemini
+    # 1. Sentiment analysis from Gemini
     sentiment_output = call_gemini(GEMINI_SENTIMENT)
 
-    # 2. Trade suggestions
+    # 2. Trade recommendations
     gemini_trades = call_gemini(GEMINI_TRADES.format(sentiment=sentiment_output))
     gpt_trades = call_gpt(GPT_TRADES.format(sentiment=sentiment_output))
 
-    # 3. Combine results
+    # 3. Combine both outputs
     combined_output = call_gpt(COMBINE_PROMPT.format(gemini=gemini_trades, gpt=gpt_trades))
 
-    # 4. Final validation
+    # 4. Validate the trade list
     gemini_validated = call_gemini(VALIDATE_GEMINI.format(combined=combined_output))
     gpt_validated = call_gpt(VALIDATE_GPT.format(combined=combined_output))
 
-    # 5. Save output
+    # 5. Save to CSV
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     df = pd.DataFrame([{
         "Timestamp": timestamp,
