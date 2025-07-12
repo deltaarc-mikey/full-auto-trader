@@ -17,7 +17,7 @@ from prompts import (
 )
 
 # ⬇️ Set up API clients
-openai.api_key = os.getenv("OPENAI_API_KEY")
+OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 gemini_key = os.getenv("GEMINI_API_KEY")
 openai_client = OpenAI()
 gemini = GenerativeModel("gemini-pro")
