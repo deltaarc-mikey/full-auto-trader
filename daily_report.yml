@@ -3,19 +3,19 @@ name: daily-report
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 8 * * *'  # 8 AM UTC
+    - cron: '0 8 * * *'  # 8 AM UTC daily
 
 jobs:
   run-report:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # <-- 🔑 Gives push access to GitHub Actions
+      contents: write  # Needed to push files
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_PUSH_TOKEN }}  # Using custom token
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -41,4 +41,4 @@ jobs:
           git commit -m "Add daily report: $FILE" || echo "No changes to commit"
           git push origin main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
