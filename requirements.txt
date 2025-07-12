@@ -1,0 +1,11 @@
+# requirements.txt (TEMPORARY TESTING VERSION)
+streamlit
+pandas
+requests
+beautifulsoup4
+yfinance
+APScheduler
+google-generativeai
+openai
+praw
+pytrends
