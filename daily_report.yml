@@ -1,45 +1,39 @@
 name: daily-report
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'  # 8 AM ET
-
-permissions:
-  contents: write
+    - cron: "0 12 * * *"  # runs daily at 8 AM ET (12:00 UTC)
+  workflow_dispatch:      # allows manual run
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main branch
+      - name: Checkout repository with push access
         uses: actions/checkout@v3
         with:
-          ref: main  # ✅ Ensure it's working directly on main
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run automated pipeline
-        run: python automated_pipeline.py
-
-      - name: Commit and push CSV if not empty
+      - name: Run automated market pipeline
         run: |
-          FILE=$(ls pre_xynth_trades_*.csv | head -n 1)
-          if [ -s "$FILE" ]; then
-            echo "✅ $FILE is not empty. Committing to main..."
-            git config --global user.name 'github-actions'
-            git config --global user.email 'github-actions@github.com'
-            git add "$FILE"
-            git commit -m "Add daily report: $FILE"
-            git push origin HEAD:main
-          else
-            echo "⚠️ $FILE is empty. Skipping commit."
-          fi
+          echo "🚀 Running automated pipeline..."
+          python automated_pipeline.py
+
+      - name: Commit and push output file
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add *.csv
+          git commit -m "Add daily report CSV $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git push
